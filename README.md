@@ -2,8 +2,6 @@
 
 A lightweight, responsive, and highly customizable browser startpage built with **Material Design 3 (Expressive)** guidelines. It features dynamic theming, grid/list toggles, and data separation for easy maintenance.
 
-*(Tip: Take a screenshot of your startpage and replace the link above)*
-
 ## Features
 
 * **Material Design 3:** Follows modern MD3 Expressive guidelines with dynamic color tokens.
