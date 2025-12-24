@@ -1,0 +1,57 @@
+:root {
+    --ref-lavender: #9D8AE3;
+    --ref-cobalt:   #5476FF;
+    --ref-glacier:  #6DD5FA;
+    --ref-emerald:  #2EB872;
+    --ref-mint:     #7DDEAA;
+    --ref-sakura:   #FF8FAB;
+    --ref-crimson:  #FF6B6B;
+    --ref-sunset:   #FFB347;
+    --ref-coffee:   #C0A080;
+    --ref-midnight: #707585;
+}
+
+:root {
+    --motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+    --shape-card: 28px;
+    --shape-pill: 100px;
+
+    --md-bg: #FEF7FF;
+    --md-surface-container: #F3EDF7;
+    --md-surface-container-high: #ECE6F0;
+    --md-primary: #6750A4;
+    --md-on-surface: #1D1B20;
+    --md-on-surface-variant: #49454F;
+    --md-outline-variant: #CAC4D0;
+    --md-secondary-container: #E8DEF8;
+    --md-on-secondary-container: #1D192B;
+    --md-shadow-color: 0,0,0;
+}
+
+[data-theme="cobalt"] { --md-bg: #FEF7FF; --md-surface-container: #EEF0FF; --md-surface-container-high: #E0E5FF; --md-primary: #355CA8; --md-secondary-container: #D9E2FF; --md-on-secondary-container: #001945; }
+[data-theme="glacier"] { --md-bg: #F5FCFF; --md-surface-container: #E6F6FB; --md-surface-container-high: #D6F0F8; --md-primary: #006684; --md-secondary-container: #BFE9F8; --md-on-secondary-container: #001F2A; }
+[data-theme="emerald"] { --md-bg: #F4FDF6; --md-surface-container: #EBF8EF; --md-surface-container-high: #DEF2E4; --md-primary: #006D42; --md-secondary-container: #98F2BF; --md-on-secondary-container: #002111; }
+[data-theme="mint"] { --md-bg: #F5FBF5; --md-surface-container: #EBF7EC; --md-surface-container-high: #DFF0E2; --md-primary: #2D6B4F; --md-secondary-container: #B6EBD0; --md-on-secondary-container: #002112; }
+[data-theme="sakura"] { --md-bg: #FFF8F9; --md-surface-container: #FFF0F3; --md-surface-container-high: #FEE6EB; --md-primary: #99405F; --md-secondary-container: #FFD9E1; --md-on-secondary-container: #3E001B; }
+[data-theme="crimson"] { --md-bg: #FFF8F7; --md-surface-container: #FFF0EE; --md-surface-container-high: #FCE8E6; --md-primary: #B3261E; --md-secondary-container: #FFDAD6; --md-on-secondary-container: #410002; }
+[data-theme="sunset"] { --md-bg: #FFF8F4; --md-surface-container: #FFF1E6; --md-surface-container-high: #FFEAD8; --md-primary: #855400; --md-secondary-container: #FFDCC2; --md-on-secondary-container: #2B1700; }
+[data-theme="coffee"] { --md-bg: #FFF9F6; --md-surface-container: #F6EFEC; --md-surface-container-high: #EDE3DE; --md-primary: #825500; --md-secondary-container: #FFDDB3; --md-on-secondary-container: #291800; }
+[data-theme="midnight"] { --md-bg: #F9F9FC; --md-surface-container: #EEF0F4; --md-surface-container-high: #E4E7ED; --md-primary: #45464F; --md-secondary-container: #DAE2FF; --md-on-secondary-container: #131D36; }
+
+@media (prefers-color-scheme: dark) {
+    :root {
+        --md-bg: #141218; --md-surface-container: #211F26; --md-surface-container-high: #2B2930;
+        --md-primary: #D0BCFF; --md-on-surface: #E6E0E9; --md-on-surface-variant: #CAC4D0;
+        --md-outline-variant: #49454F; --md-secondary-container: #4A4458; --md-on-secondary-container: #E8DEF8;
+    }
+    
+    [data-theme="cobalt"] { --md-bg: #111318; --md-surface-container: #1D2028; --md-primary: #B0C6FF; --md-secondary-container: #2F4477; --md-on-secondary-container: #D9E2FF; }
+    [data-theme="glacier"] { --md-bg: #0F1417; --md-surface-container: #182024; --md-primary: #80D3F5; --md-secondary-container: #004D63; --md-on-secondary-container: #BFE9F8; }
+    [data-theme="emerald"] { --md-bg: #0C1510; --md-surface-container: #17211B; --md-primary: #6DD59E; --md-secondary-container: #005230; --md-on-secondary-container: #98F2BF; }
+    [data-theme="mint"] { --md-bg: #0F1511; --md-surface-container: #19211C; --md-primary: #95D5B3; --md-secondary-container: #145037; --md-on-secondary-container: #B6EBD0; }
+    [data-theme="sakura"] { --md-bg: #1A1114; --md-surface-container: #271C20; --md-primary: #FFB1C8; --md-secondary-container: #7B2845; --md-on-secondary-container: #FFD9E1; }
+    [data-theme="crimson"] { --md-bg: #1A1111; --md-surface-container: #281B1B; --md-primary: #FFB4AB; --md-secondary-container: #93000A; --md-on-secondary-container: #FFDAD6; }
+    [data-theme="sunset"] { --md-bg: #19120C; --md-surface-container: #261D16; --md-primary: #FFB77C; --md-secondary-container: #663E00; --md-on-secondary-container: #FFDCC2; }
+    [data-theme="coffee"] { --md-bg: #18120E; --md-surface-container: #241D19; --md-primary: #FFB870; --md-secondary-container: #613F00; --md-on-secondary-container: #FFDDB3; }
+    [data-theme="midnight"] { --md-bg: #111318; --md-surface-container: #1B1C22; --md-primary: #BFC6DC; --md-secondary-container: #3F4759; --md-on-secondary-container: #DAE2FF; }
+}
