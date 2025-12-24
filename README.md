@@ -1,4 +1,4 @@
-# Bookmark Home
+# Startpage
 
 A lightweight, responsive, and highly customizable browser startpage built with **Material Design 3 (Expressive)** guidelines. It features dynamic theming, grid/list toggles, and data separation for easy maintenance.
 
