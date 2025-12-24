@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Loading...</title>
+    
+    <link rel="preconnect" href="https://icons.duckduckgo.com">
+    
+    <script>
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            const sourceParam = params.get('source');
+            
+            let jsPath, cssPath;
+
+            if (sourceParam && /^https?:\/\//i.test(sourceParam)) {
+                jsPath = sourceParam;
+                cssPath = 'data/default.css';
+            } else {
+                const name = sourceParam || 'default';
+                jsPath = 'data/' + name + '.js';
+                cssPath = 'data/' + name + '.css';
+            }
+
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = cssPath;
+            document.head.appendChild(link);
+
+            const script = document.createElement('script');
+            script.src = jsPath;
+            script.onload = function() {
+                if (typeof initApp === 'function') initApp();
+            };
+            script.onerror = function() {
+                document.title = "Error";
+                alert("Error loading data file:\n" + jsPath);
+            };
+            document.head.appendChild(script);
+        })();
+    </script>
+
+    <style>
+        
+        :root {
+            --motion-easing-emphasized: cubic-bezier(0.2, 0.0, 0.0, 1.0);
+            --motion-easing-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            --shape-card: 24px;
+            --shape-pill: 100px;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; outline: none; -webkit-tap-highlight-color: transparent; }
+        
+        body {
+            font-family: 'Roboto', 'Segoe UI', BlinkMacSystemFont, system-ui, -apple-system, sans-serif;
+            background-color: var(--md-bg);
+            color: var(--md-on-surface);
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start; 
+            overflow-x: hidden;
+            
+            background-image: 
+                radial-gradient(at 0% 0%, color-mix(in srgb, var(--md-secondary-container) 20%, transparent) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, color-mix(in srgb, var(--md-secondary-container) 20%, transparent) 0px, transparent 50%);
+            background-attachment: fixed; background-size: cover;
+            transition: background-color 0.5s var(--motion-easing-emphasized);
+        }
+
+        body.has-wallpaper::before {
+            content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at center, rgba(0,0,0,0.05) 0%, var(--md-bg) 120%);
+            opacity: 0.6; z-index: -1; pointer-events: none;
+        }
+
+        .header-layout {
+            position: fixed; top: 32px; z-index: 100; width: 100%;
+            display: flex; justify-content: center; align-items: flex-start;
+            padding: 0 20px; pointer-events: none;
+            transition: top 0.3s ease, padding 0.3s ease;
+        }
+
+        .search-container {
+            pointer-events: auto; width: 100%; max-width: 720px; height: 56px;
+            background: var(--md-surface-container);
+            display: flex; flex-direction: column;
+            border-radius: 28px;
+            box-shadow: 0 4px 12px rgba(var(--md-shadow-color), 0.08);
+            overflow: hidden; 
+            transition: all 400ms var(--motion-easing-emphasized);
+        }
+        .search-container.active { height: auto; max-height: 70vh; box-shadow: 0 8px 24px rgba(var(--md-shadow-color), 0.15); }
+
+        .search-top-bar {
+            width: 100%; height: 56px; flex-shrink: 0;
+            display: flex; align-items: center; padding: 0 16px; cursor: pointer;
+        }
+
+        .svg-icon { width: 24px; height: 24px; fill: currentColor; display: inline-block; flex-shrink: 0; }
+        .search-icon { color: var(--md-primary); margin-right: 12px; transition: color 0.2s; }
+        .search-input { flex-grow: 1; height: 100%; background: transparent; border: none; font-size: 1.1rem; outline: none; color: var(--md-on-surface); font-family: inherit; }
+        .search-input::placeholder { color: var(--md-on-surface-variant); opacity: 0.7; }
+
+        .search-suggestions-area {
+            width: 100%; padding: 0 16px 16px 16px; opacity: 0; transition: opacity 200ms linear; pointer-events: none;
+            display: flex; flex-direction: column; overflow-y: auto;
+        }
+        .search-container.active .search-suggestions-area { opacity: 1; pointer-events: auto; transition-delay: 100ms; border-top: 1px solid var(--md-outline-variant); padding-top: 16px; }
+
+        .chips-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 4px; }
+        .chip {
+            height: 32px; padding: 0 16px; border-radius: 8px;
+            background-color: transparent; border: 1px solid var(--md-outline-variant); 
+            color: var(--md-on-surface-variant); font-family: inherit; font-weight: 500; font-size: 0.85rem;
+            cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: center;
+            transition: all 200ms var(--motion-easing-emphasized);
+        }
+        .chip:hover { background-color: color-mix(in srgb, var(--md-on-surface) 4%, transparent); color: var(--md-on-surface); }
+        .chip.active { background-color: var(--md-secondary-container); border-color: transparent; color: var(--md-on-secondary-container); }
+        .chip.key-focused { border-color: var(--md-primary); background-color: color-mix(in srgb, var(--md-primary) 4%, transparent); transform: scale(1.05); box-shadow: 0 2px 8px rgba(var(--md-shadow-color), 0.1); }
+        .chip.active.key-focused { filter: brightness(0.95); }
+
+        .menu-divider { width: 100%; height: 1px; background-color: var(--md-outline-variant); margin: 12px 0; flex-shrink: 0; opacity: 0.5; }
+
+        .theme-section-wrapper { position: relative; width: 100%; overflow: hidden; display: flex; flex-direction: column; gap: 4px; }
+        .theme-view { width: 100%; display: flex; align-items: center; transition: transform 400ms var(--motion-easing-emphasized), opacity 300ms ease; }
+
+        #themeEntryView { z-index: 2; transform: translateX(0); opacity: 1; flex-direction: column; align-items: flex-start; gap: 4px; }
+        #themeEntryView.hidden { transform: translateX(-20%); opacity: 0; pointer-events: none; }
+
+        .menu-btn {
+            width: 100%; height: 48px; display: flex; align-items: center; justify-content: space-between;
+            padding: 0 12px; border-radius: 12px; border: none; background: transparent;
+            color: var(--md-on-surface); font-family: inherit; font-size: 0.95rem; font-weight: 500; cursor: pointer;
+        }
+        .menu-btn:hover { background-color: color-mix(in srgb, var(--md-on-surface) 4%, transparent); }
+        .menu-btn.key-focused { background-color: color-mix(in srgb, var(--md-on-surface) 8%, transparent); outline: 2px solid var(--md-primary); }
+
+        .btn-label-group { display: flex; align-items: center; gap: 12px; }
+        .btn-label-group .svg-icon, .menu-btn .svg-icon { width: 20px; height: 20px; color: var(--md-on-surface-variant); }
+
+        #themeSwatchesView { 
+            position: absolute; top: 0; left: 0; height: 100%;
+            z-index: 1; transform: translateX(20%); opacity: 0; pointer-events: none; 
+            justify-content: flex-start; gap: 12px; background: var(--md-surface-container);
+        }
+        #themeSwatchesView.active { transform: translateX(0); opacity: 1; pointer-events: auto; }
+
+        .icon-btn {
+            width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            border: none; background: transparent; color: var(--md-on-surface-variant); cursor: pointer; flex-shrink: 0;
+            transition: background-color 0.2s;
+        }
+        .icon-btn:hover { background-color: color-mix(in srgb, var(--md-on-surface) 8%, transparent); color: var(--md-on-surface); }
+        .icon-btn .svg-icon { width: 20px; height: 20px; }
+
+        .swatches-row { display: flex; gap: 12px; align-items: center; overflow-x: auto; scrollbar-width: none; padding: 4px 8px; height: 100%; }
+        
+        .theme-swatch {
+            width: 24px; height: 24px; border-radius: 50%; cursor: pointer; background-color: var(--swatch-color);
+            border: 1px solid rgba(128,128,128,0.2); flex-shrink: 0; position: relative;
+            transition: transform 300ms var(--motion-easing-spring), box-shadow 300ms ease;
+        }
+        .theme-swatch:hover { transform: scale(1.15); box-shadow: 0 2px 6px rgba(var(--md-shadow-color), 0.15); }
+        .theme-swatch.active { transform: scale(0.9); box-shadow: 0 0 0 2px var(--md-surface-container), 0 0 0 4px var(--swatch-color); z-index: 2; }
+        .theme-swatch.key-focused { transform: scale(1.15); box-shadow: 0 4px 12px rgba(var(--md-shadow-color), 0.2); z-index: 3; }
+
+        .layout-container { 
+            width: 100%; max-width: 960px; z-index: 1; 
+            padding: 140px 40px 40px 40px; 
+            transition: all 0.5s var(--motion-easing-emphasized); 
+        }
+        .layout-container.centered-view { min-height: 90vh; display: flex; align-items: center; justify-content: center; padding-top: 100px; }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 24px; width: 100%; justify-content: center; 
+            transition: gap 0.3s ease; 
+        }
+
+        .app-card {
+            aspect-ratio: 1 / 1; height: auto; 
+            background-color: var(--md-surface-container); 
+            border-radius: var(--shape-card);
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+            text-decoration: none; color: var(--md-on-surface); cursor: pointer;
+            border: 2px solid transparent; opacity: 0; overflow: hidden;
+            box-shadow: 0 1px 3px rgba(var(--md-shadow-color), 0.05); 
+            transition: transform 400ms var(--motion-easing-emphasized), box-shadow 400ms var(--motion-easing-emphasized), background-color 0.2s, border-color 0.2s, color 0.2s;
+        }
+        .pop-in { animation: popUp 500ms var(--motion-easing-emphasized) forwards; }
+        
+        .app-card:hover, .app-card.selected { 
+            background-color: var(--md-secondary-container); 
+            color: var(--md-on-secondary-container);
+            border-color: var(--md-primary); 
+            transform: translateY(-6px); 
+            box-shadow: 0 10px 20px rgba(var(--md-shadow-color), 0.12); 
+        }
+        
+        .app-card:hover .label-title, .app-card.selected .label-title { color: inherit; }
+        .app-card:hover .label-desc, .app-card.selected .label-desc { color: inherit; opacity: 0.8; }
+        .app-card:active { transform: scale(0.96); }
+        
+        .app-card.bookmark-item { padding: 16px; }
+        .app-icon { width: 48px; height: 48px; border-radius: 50%; object-fit: contain; background: #fff; padding: 6px; box-shadow: 0 2px 4px rgba(var(--md-shadow-color), 0.05); }
+        .app-label { text-align: center; width: 100%; max-width: 120px; display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
+        .label-title { font-size: 0.95rem; font-weight: 500; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--md-on-surface); }
+        .label-desc { font-size: 0.75rem; opacity: 0.8; font-weight: 400; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--md-on-surface-variant); }
+
+        .grid.list-view {
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+            gap: 16px; max-width: 100%; 
+        }
+        
+        .grid.list-view .app-card {
+            aspect-ratio: auto; 
+            height: 96px; 
+            flex-direction: row; 
+            justify-content: flex-start;
+            align-items: center;
+            padding: 12px 24px; 
+            gap: 16px; 
+            transform: none !important;
+        }
+        
+        .grid.list-view .app-card:hover, .grid.list-view .app-card.selected { transform: scale(1.01) !important; }
+
+        .grid.list-view .app-icon { 
+            width: 56px; height: 56px; 
+            padding: 10px; 
+            box-shadow: none; 
+            background-color: var(--md-surface-container-high); 
+            border-radius: 16px;
+            flex-shrink: 0;
+        }
+        
+        .grid.list-view .app-label { 
+            align-items: flex-start; 
+            text-align: left; 
+            max-width: 100%; 
+            gap: 2px;
+        }
+        .grid.list-view .label-title { font-size: 1rem; }
+        
+        .grid.list-view .label-desc { 
+            font-size: 0.85rem;
+            white-space: normal; 
+            display: -webkit-box;
+            -webkit-line-clamp: 2; 
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            line-height: 1.35;
+        }
+
+        @media (max-width: 600px) {
+            .header-layout { top: 16px; padding: 0 16px; }
+            .search-container { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+            
+            .layout-container { padding: 140px 16px 40px 16px; }
+            .layout-container.centered-view { padding-top: 100px; min-height: 70vh; }
+            
+            .grid { gap: 16px; grid-template-columns: 1fr 1fr; }
+            .app-card.bookmark-item { padding: 16px; gap: 8px; }
+            .app-icon { width: 44px; height: 44px; }
+            
+            .grid.list-view { grid-template-columns: 1fr !important; gap: 8px; }
+            .grid.list-view .app-card { padding: 8px 16px; height: 80px; }
+            .grid.list-view .app-icon { width: 48px; height: 48px; padding: 8px; border-radius: 12px; }
+
+            :root { --shape-card: 24px; } 
+            .label-title { font-size: 0.9rem; }
+            .label-desc { font-size: 0.75rem; }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            .search-container { box-shadow: 0 4px 20px rgba(0,0,0,0.4); }
+        }
+        @keyframes popUp { 0% { opacity: 0; transform: scale(0.8) translateY(20px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+    </style>
+</head>
+<body>
+
+    <div class="header-layout">
+        <div class="search-container" id="searchContainer">
+            <div class="search-top-bar" onclick="openSearch()">
+                <div class="icon-slot search-icon" data-icon="search"></div>
+                <input type="text" class="search-input" id="searchInput" placeholder="Search / or select category" autocomplete="off">
+            </div>
+            
+            <div class="search-suggestions-area">
+                <div class="chips-grid" id="chipsRow"></div>
+                <div class="menu-divider"></div>
+                
+                <div class="theme-section-wrapper">
+                    <div class="theme-view" id="themeEntryView">
+                        <button class="menu-btn" onclick="toggleViewMode(event)">
+                            <div class="btn-label-group">
+                                <div class="icon-slot svg-icon" id="viewModeIcon" data-icon="view_grid"></div>
+                                <span id="viewModeLabel">Grid View</span>
+                            </div>
+                        </button>
+
+                        <button class="menu-btn theme-entry-btn" onclick="showThemeSwatches(event)">
+                            <div class="btn-label-group">
+                                <div class="icon-slot svg-icon" data-icon="palette"></div>
+                                <span>Color Theme</span>
+                            </div>
+                            <div class="icon-slot svg-icon" data-icon="chevron_right"></div>
+                        </button>
+                    </div>
+
+                    <div class="theme-view" id="themeSwatchesView">
+                        <button class="icon-btn" onclick="hideThemeSwatches(event)" title="Back to menu">
+                            <div class="icon-slot svg-icon" data-icon="arrow_back"></div>
+                        </button>
+                        <div class="swatches-row" id="themesRow"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="layout-container">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <script>
+        const ICONS = {
+            search: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>',
+            palette: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9c-.83 0-1.5-.67-1.5-1.5S5.67 9 6.5 9 8 9.67 8 10.5 7.33 12 6.5 12zm3-4C8.67 8 8 7.33 8 6.5S8.67 5 9.5 5s1.5.67 1.5 1.5S10.33 8 9.5 8zm5 0c-.83 0-1.5-.67-1.5-1.5S13.67 5 14.5 5s1.5.67 1.5 1.5S15.33 8 14.5 8zm3 4c-.83 0-1.5-.67-1.5-1.5S16.67 9 17.5 9s1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/></svg>',
+            chevron_right: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>',
+            arrow_back: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>',
+            bookmark: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>',
+            view_grid: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M3 11h8V3H3v8zm0 10h8v-8H3v8zm10-18v8h8V3h-8zm0 18h8v-8h-8v8z"/></svg>',
+            view_list: '<svg viewBox="0 0 24 24" class="svg-icon"><path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/></svg>'
+        };
+
+        function injectIcons() {
+            document.querySelectorAll('.icon-slot').forEach(slot => {
+                const key = slot.getAttribute('data-icon');
+                if(ICONS[key]) slot.innerHTML = ICONS[key];
+            });
+        }
+
+        function setFavicon() {
+            if (ICONS.bookmark) {
+                const encodedSVG = encodeURIComponent(ICONS.bookmark.replace('class="svg-icon"', 'fill="%23444746"'));
+                const link = document.createElement('link');
+                link.rel = 'icon';
+                link.href = `data:image/svg+xml;utf8,${encodedSVG}`;
+                document.head.appendChild(link);
+            }
+        }
+
+        let activeCategories = new Set(); 
+        let currentVisibleCards = []; 
+        let selectedIndex = -1; 
+        let selectedChipIndex = -1;
+        let currentTheme = localStorage.getItem('user_theme');
+        let currentView = localStorage.getItem('user_view'); // Don't default yet
+
+        function initApp() {
+            injectIcons();
+            setFavicon();
+            
+            // Priority: LocalStorage > Default in JS > Default in Code
+            if (!currentTheme && typeof defaultTheme !== 'undefined') {
+                currentTheme = defaultTheme;
+            }
+            if (typeof themeConfig !== 'undefined' && themeConfig.length > 0) {
+                if (!currentTheme || !themeConfig.includes(currentTheme)) {
+                    currentTheme = themeConfig[0];
+                }
+                setTheme(currentTheme);
+            } else {
+                document.querySelector('.theme-section-wrapper').style.display = 'none';
+                document.querySelector('.menu-divider').style.display = 'none';
+            }
+
+            // View Mode Logic
+            if (!currentView && typeof defaultView !== 'undefined') {
+                currentView = defaultView;
+            }
+            if (!currentView) currentView = 'grid'; // Fallback
+            
+            updateViewModeUI();
+
+            // Page Title
+            if (typeof pageTitle !== 'undefined' && pageTitle) {
+                document.title = pageTitle;
+            }
+
+            if (typeof wallpaperUrl !== 'undefined' && wallpaperUrl && wallpaperUrl.trim() !== "") {
+                const img = new Image();
+                img.src = wallpaperUrl;
+                img.onload = () => {
+                    document.body.style.backgroundImage = `url('${wallpaperUrl}')`;
+                    document.body.classList.add('has-wallpaper');
+                };
+            }
+
+            renderBookmarks();
+        }
+
+        function setTheme(theme) {
+            currentTheme = theme;
+            document.documentElement.setAttribute('data-theme', theme);
+            localStorage.setItem('user_theme', theme);
+            document.querySelectorAll('.theme-swatch').forEach(swatch => {
+                swatch.classList.toggle('active', swatch.getAttribute('data-theme') === theme);
+            });
+        }
+
+        function toggleViewMode(e) {
+            e.stopPropagation();
+            currentView = currentView === 'grid' ? 'list' : 'grid';
+            localStorage.setItem('user_view', currentView);
+            updateViewModeUI();
+            renderBookmarks(); 
+        }
+
+        function updateViewModeUI() {
+            const grid = document.getElementById('grid');
+            const iconSlot = document.getElementById('viewModeIcon');
+            const label = document.getElementById('viewModeLabel');
+            
+            if (currentView === 'list') {
+                grid.classList.add('list-view');
+                iconSlot.innerHTML = ICONS.view_grid; 
+                label.innerText = "Switch to Grid";
+            } else {
+                grid.classList.remove('list-view');
+                iconSlot.innerHTML = ICONS.view_list; 
+                label.innerText = "Switch to List";
+            }
+        }
+
+        function renderBookmarks() {
+            const grid = document.getElementById('grid');
+            grid.innerHTML = '';
+            
+            generateChips();
+            generateThemeSwatches();
+
+            if (typeof bookmarksData !== 'undefined') {
+                if (bookmarksData.length > 11) document.querySelector('.layout-container').classList.remove('centered-view');
+                else document.querySelector('.layout-container').classList.add('centered-view');
+
+                bookmarksData.forEach((item, index) => {
+                    const domain = new URL(item.url).hostname;
+                    const ddg = `https://icons.duckduckgo.com/ip3/${domain}.ico`;
+                    const icon = item.icon || ddg;
+                    const safeCategory = item.category ? item.category.trim() : 'Uncategorized';
+                    const html = `
+                        <a href="${item.url}" class="app-card bookmark-item pop-in" data-category="${safeCategory}" style="animation-delay: ${index*0.04}s">
+                            <img src="${icon}" class="app-icon" onerror="this.src='${ddg}'">
+                            <div class="app-label"><span class="label-title">${item.title}</span><span class="label-desc">${item.subtitle}</span></div>
+                        </a>
+                    `;
+                    grid.insertAdjacentHTML('beforeend', html);
+                });
+            }
+            selectedIndex = -1;
+            updateVisibleList(); 
+        }
+
+        function generateThemeSwatches() {
+            const container = document.getElementById('themesRow');
+            if (typeof themeConfig !== 'undefined' && themeConfig.length > 1) {
+                container.innerHTML = themeConfig.map(theme => {
+                    const activeClass = theme === currentTheme ? 'active' : '';
+                    return `
+                        <div class="theme-swatch ${activeClass}" 
+                             data-theme="${theme}" 
+                             onclick="selectTheme(event, '${theme}')" 
+                             style="--swatch-color: var(--ref-${theme});"
+                             title="${theme}">
+                        </div>
+                    `;
+                }).join('');
+            }
+        }
+
+        function generateChips() {
+            const container = document.getElementById('chipsRow');
+            if (typeof bookmarksData !== 'undefined') {
+                const categories = [...new Set(bookmarksData.map(item => item.category ? item.category.trim() : 'Uncategorized'))].sort();
+                if (categories.length <= 1) {
+                    container.style.display = 'none';
+                } else {
+                    container.style.display = 'flex';
+                    container.innerHTML = categories.map(cat => `
+                        <button class="chip" data-cat="${cat}" onclick="toggleCategory(event, this)">
+                            ${cat}
+                        </button>
+                    `).join('');
+                }
+            }
+        }
+
+        function showThemeSwatches(e) {
+            e.stopPropagation();
+            document.getElementById('themeEntryView').classList.add('hidden');
+            document.getElementById('themeSwatchesView').classList.add('active');
+        }
+
+        function hideThemeSwatches(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('themeEntryView').classList.remove('hidden');
+            document.getElementById('themeSwatchesView').classList.remove('active');
+        }
+
+        function selectTheme(e, theme) {
+            e.stopPropagation();
+            setTheme(theme);
+        }
+
+        function toggleCategory(e, btn) {
+            e.stopPropagation(); 
+            const cat = btn.getAttribute('data-cat');
+            if (activeCategories.has(cat)) { activeCategories.delete(cat); } 
+            else { activeCategories.add(cat); }
+            if (searchInput.value !== '') { searchInput.value = ''; }
+            document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', activeCategories.has(c.getAttribute('data-cat'))));
+            applyVisibility(false, (card) => activeCategories.size === 0 || activeCategories.has(card.getAttribute('data-category')));
+            selectedIndex = -1;
+            updateSelectionVisuals();
+        }
+
+        function updateVisibleList() {
+            const allCards = Array.from(document.querySelectorAll('.app-card'));
+            currentVisibleCards = allCards.filter(card => card.style.display !== 'none');
+            if (selectedIndex >= currentVisibleCards.length) selectedIndex = -1;
+            updateSelectionVisuals();
+        }
+
+        function updateSelectionVisuals() {
+            document.querySelectorAll('.app-card').forEach(c => c.classList.remove('selected'));
+            if (selectedIndex >= 0 && currentVisibleCards.length > 0 && currentVisibleCards[selectedIndex]) {
+                const card = currentVisibleCards[selectedIndex];
+                card.classList.add('selected');
+                card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        function applyVisibility(showAll = false, filterFn = null) {
+            const cards = document.querySelectorAll('.app-card');
+            cards.forEach((card) => {
+                const isVisible = showAll || (filterFn && filterFn(card));
+                card.style.display = isVisible ? 'flex' : 'none';
+            });
+            updateVisibleList(); 
+        }
+
+        document.getElementById('grid').addEventListener('mouseover', (e) => {
+            const card = e.target.closest('.app-card');
+            if (card && currentVisibleCards.includes(card)) {
+                selectedIndex = currentVisibleCards.indexOf(card);
+                updateSelectionVisuals();
+            }
+        });
+
+        function getGridColumns() {
+            if (currentView === 'list') return 1;
+            
+            if (currentVisibleCards.length < 2) return 1;
+            const firstTop = currentVisibleCards[0].offsetTop;
+            for (let i = 1; i < currentVisibleCards.length; i++) {
+                if (currentVisibleCards[i].offsetTop > firstTop) return i; 
+            }
+            return currentVisibleCards.length;
+        }
+
+        const searchContainer = document.getElementById('searchContainer');
+        const searchInput = document.getElementById('searchInput');
+
+        function openSearch() {
+            searchContainer.classList.add('active');
+            searchInput.focus();
+        }
+
+        function closeSearch() {
+            searchContainer.classList.remove('active');
+            searchInput.blur();
+            selectedChipIndex = -1;
+            hideThemeSwatches(null); 
+            updateChipVisuals();
+        }
+
+        function updateChipVisuals() {
+            const navigables = Array.from(document.querySelectorAll('.chip, .menu-btn, .icon-btn, .theme-swatch'));
+            navigables.forEach((c, idx) => {
+                c.classList.toggle('key-focused', idx === selectedChipIndex);
+            });
+            if(selectedChipIndex !== -1 && navigables[selectedChipIndex]) {
+                navigables[selectedChipIndex].scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            const isInputFocused = document.activeElement === searchInput;
+            const isSearchOpen = searchContainer.classList.contains('active');
+            
+            if (e.key === 'Tab' && isInputFocused) {
+                e.preventDefault();
+                closeSearch(); 
+                if (currentVisibleCards.length > 0) { selectedIndex = 0; updateSelectionVisuals(); }
+                return;
+            }
+
+            let navigables = [];
+            if(document.getElementById('chipsRow').style.display !== 'none') {
+                document.querySelectorAll('.chip').forEach(c => navigables.push(c));
+            }
+            
+            if (document.querySelector('.theme-section-wrapper').style.display !== 'none') {
+                if (document.getElementById('themeSwatchesView').classList.contains('active')) {
+                    navigables.push(document.querySelector('.icon-btn'));
+                    document.querySelectorAll('.theme-swatch').forEach(s => navigables.push(s));
+                } else {
+                    document.querySelectorAll('.menu-btn').forEach(btn => {
+                        if (btn.offsetParent !== null) navigables.push(btn);
+                    });
+                }
+            }
+
+            if (e.key === '/' && !isInputFocused) { e.preventDefault(); openSearch(); return; }
+            
+            if (isSearchOpen) {
+                if (e.key === 'Escape') { closeSearch(); return; }
+                if (e.key === 'ArrowDown' && isInputFocused) {
+                    e.preventDefault(); searchInput.blur(); selectedChipIndex = 0; updateChipVisuals(); return;
+                }
+                
+                if (!isInputFocused && navigables.length > 0) {
+                    if (e.key === 'ArrowRight') selectedChipIndex = (selectedChipIndex + 1) % navigables.length;
+                    else if (e.key === 'ArrowLeft') selectedChipIndex = (selectedChipIndex - 1 + navigables.length) % navigables.length;
+                    else if (e.key === 'ArrowDown') {
+                        e.preventDefault(); selectedChipIndex = Math.min(selectedChipIndex + 1, navigables.length - 1); updateChipVisuals();
+                    }
+                    else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (selectedChipIndex <= 0) { selectedChipIndex = -1; searchInput.focus(); }
+                        else selectedChipIndex -= 1;
+                        updateChipVisuals();
+                    }
+                    else if (e.key === 'Enter' && selectedChipIndex !== -1) { 
+                        e.preventDefault(); navigables[selectedChipIndex].click(); 
+                    }
+                    if (e.key !== 'Enter') updateChipVisuals();
+                    if (e.key.length === 1) searchInput.focus();
+                    return; 
+                }
+            }
+
+            if (!isSearchOpen && currentVisibleCards.length > 0) {
+                const key = e.key.toLowerCase();
+                let move = 0;
+                const cols = getGridColumns();
+                
+                if ((e.key === 'ArrowRight' || key === 'd') && !isInputFocused) move = 1;
+                else if ((e.key === 'ArrowLeft' || key === 'a') && !isInputFocused) move = -1;
+                else if ((e.key === 'ArrowDown' || key === 's') && !isInputFocused) move = cols;
+                else if ((e.key === 'ArrowUp' || key === 'w') && !isInputFocused) move = -cols;
+
+                if (move !== 0) {
+                    if (selectedIndex === -1) selectedIndex = 0;
+                    else selectedIndex = (selectedIndex + move + currentVisibleCards.length) % currentVisibleCards.length;
+                    updateSelectionVisuals();
+                }
+                if (e.key === 'Enter' && selectedIndex !== -1) { e.preventDefault(); currentVisibleCards[selectedIndex].click(); }
+            }
+        });
+        
+        searchInput.addEventListener('input', (e) => {
+            if(!searchContainer.classList.contains('active')) openSearch();
+            const val = e.target.value.toLowerCase().trim();
+            if (val.length > 0 && activeCategories.size > 0) { 
+                activeCategories.clear(); 
+                document.querySelectorAll('.chip').forEach(c => c.classList.remove('active')); 
+            }
+            applyVisibility(false, (card) => card.innerText.toLowerCase().includes(val));
+            if (val.length > 0) selectedIndex = 0; else selectedIndex = -1;
+            updateSelectionVisuals();
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchContainer.contains(e.target)) {
+                closeSearch();
+            }
+        });
+    </script>
+</body>
+</html>
